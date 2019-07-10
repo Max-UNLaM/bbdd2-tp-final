@@ -1,11 +1,55 @@
-/*
+ï»¿/*
 Autor: Equipo Base De Datos
-Fecha de Creación: 27/05/2019
-Función: Modificar tabla de dos bases de datos para que la de destino coincidacon formato de tabla de origen
+Fecha de CreaciÃ³n: 27/05/2019
+FunciÃ³n: Modificar tabla de dos bases de datos para que la de destino coincidacon formato de tabla de origen
 Task: Manual
 */
+create procedure SP_Columnas_Diferencia @base1 varchar(max),@base2 varchar(max),@basetabla1 varchar(max),@basetabla2 varchar(max)
+as
+begin
+declare @sql varchar(max)
+set @sql='SELECT Columnas
+FROM
+(
+    SELECT  c.name "Columnas"
+    FROM '+ @base1+'.sys.tables t
+    INNER JOIN '+ @base1+'.sys.all_columns c 
+            ON t.object_id = c.object_id
+    INNER JOIN '+ @base1+'.sys.types ty 
+            ON c.system_type_id = ty.system_type_id
+    WHERE t.name = '''+ @basetabla1+'''
+    EXCEPT
+    SELECT  c.name "Columnas"
+    FROM '+ @base2+'.sys.tables t
+    INNER JOIN '+ @base2+'.sys.all_columns c 
+            ON t.object_id = c.object_id
+    INNER JOIN '+ @base2+'.sys.types ty 
+            ON c.system_type_id = ty.system_type_id
+    WHERE t.name = '''+ @basetabla2+'''
+) as izquierda
+UNION ALL
+SELECT Columnas
+FROM
+(
+    SELECT  c.name "Columnas"
+    FROM '+ @base2+'.sys.tables t
+    INNER JOIN '+ @base2+'.sys.all_columns c 
+            ON t.object_id = c.object_id
+    INNER JOIN '+ @base2+'.sys.types ty 
+            ON c.system_type_id = ty.system_type_id
+    WHERE t.name = '''+ @basetabla2+'''
+    EXCEPT
+    SELECT  c.name "Columnas"
+    FROM '+ @base1+'.sys.tables t
+    INNER JOIN '+ @base1+'.sys.all_columns c 
+            ON t.object_id = c.object_id
+    INNER JOIN '+ @base1+'.sys.types ty 
+            ON c.system_type_id = ty.system_type_id
+    WHERE t.name = '''+ @basetabla1+'''
+) as derecha'
 
-
+exec(@sql)
+end
 
 
 CREATE PROCEDURE SP_TABLE_COMPARE @table VARCHAR(80), @origin_database VARCHAR(80), @destination_database VARCHAR(80)
@@ -36,49 +80,10 @@ CREATE TABLE #columnasHuerfanas (COLUMN_NAME VARCHAR(80))(
 	LEFT JOIN #columnasTablaDestino AS dest ON ori.COLUMN_NAME = dest.COLUMN_NAME
 		WHERE dest.COLUMN_NAME = NULL
 );
-	-- Crear el SP (o meter acá) para recorrer, cursor mediante, estas columnas para realizar el alter correspondiente en la tabla destino
+IF (SELECT COUNT(COLUMN_NAME) FROM #columnasHuerfanas) > 0
+	-- Crear el SP (o meter aca) para recorrer, cursor mediante, estas columnas para realizar el alter correspondiente en la tabla destino
 	RAISERROR('Not implemented', 16, 1)
-GO
 
-SELECT Columnas
-FROM
-(
-    SELECT  c.name "Columnas"
-    FROM Musica.sys.tables t
-    INNER JOIN Musica.sys.all_columns c 
-            ON t.object_id = c.object_id
-    INNER JOIN Musica.sys.types ty 
-            ON c.system_type_id = ty.system_type_id
-    WHERE t.name = 'Cantante'
-    EXCEPT
-    SELECT  c.name
-    FROM Musica2.sys.tables t
-    INNER JOIN Musica2.sys.all_columns c 
-            ON t.object_id = c.object_id
-    INNER JOIN Musica2.sys.types ty 
-            ON c.system_type_id = ty.system_type_id
-    WHERE t.name = 'Cantante'
-) as izquierda
-UNION ALL
-SELECT Columnas
-FROM
-(
-    SELECT  c.name Columnas
-    FROM Musica2.sys.tables t
-    INNER JOIN Musica2.sys.all_columns c  
-            ON t.object_id = c.object_id
-    INNER JOIN Musica2.sys.types ty      
-            ON c.system_type_id = ty.system_type_id
-    WHERE t.name = 'Cantante'
-    EXCEPT
-    SELECT  c.name
-    FROM Musica.sys.tables t
-    INNER JOIN Musica.sys.all_columns c 
-            ON t.object_id = c.object_id
-    INNER JOIN Musica.sys.types ty 
-            ON c.system_type_id = ty.system_type_id
-    WHERE t.name = 'Cantante'
-) as derecha;
 END TRY
 BEGIN CATCH
 END CATCH
