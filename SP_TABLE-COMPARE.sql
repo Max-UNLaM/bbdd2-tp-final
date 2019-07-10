@@ -5,6 +5,9 @@ Función: Modificar tabla de dos bases de datos para que la de destino coincidaco
 Task: Manual
 */
 
+
+
+
 CREATE PROCEDURE SP_TABLE_COMPARE @table VARCHAR(80), @origin_database VARCHAR(80), @destination_database VARCHAR(80)
 AS
 BEGIN TRY
@@ -33,9 +36,49 @@ CREATE TABLE #columnasHuerfanas (COLUMN_NAME VARCHAR(80))(
 	LEFT JOIN #columnasTablaDestino AS dest ON ori.COLUMN_NAME = dest.COLUMN_NAME
 		WHERE dest.COLUMN_NAME = NULL
 );
-IF (SELECT COUNT(COLUMN_NAME) FROM #columnasHuerfanas) > 0
 	-- Crear el SP (o meter acá) para recorrer, cursor mediante, estas columnas para realizar el alter correspondiente en la tabla destino
 	RAISERROR('Not implemented', 16, 1)
+GO
+
+SELECT Columnas
+FROM
+(
+    SELECT  c.name "Columnas"
+    FROM Musica.sys.tables t
+    INNER JOIN Musica.sys.all_columns c 
+            ON t.object_id = c.object_id
+    INNER JOIN Musica.sys.types ty 
+            ON c.system_type_id = ty.system_type_id
+    WHERE t.name = 'Cantante'
+    EXCEPT
+    SELECT  c.name
+    FROM Musica2.sys.tables t
+    INNER JOIN Musica2.sys.all_columns c 
+            ON t.object_id = c.object_id
+    INNER JOIN Musica2.sys.types ty 
+            ON c.system_type_id = ty.system_type_id
+    WHERE t.name = 'Cantante'
+) as izquierda
+UNION ALL
+SELECT Columnas
+FROM
+(
+    SELECT  c.name Columnas
+    FROM Musica2.sys.tables t
+    INNER JOIN Musica2.sys.all_columns c  
+            ON t.object_id = c.object_id
+    INNER JOIN Musica2.sys.types ty      
+            ON c.system_type_id = ty.system_type_id
+    WHERE t.name = 'Cantante'
+    EXCEPT
+    SELECT  c.name
+    FROM Musica.sys.tables t
+    INNER JOIN Musica.sys.all_columns c 
+            ON t.object_id = c.object_id
+    INNER JOIN Musica.sys.types ty 
+            ON c.system_type_id = ty.system_type_id
+    WHERE t.name = 'Cantante'
+) as derecha;
 END TRY
 BEGIN CATCH
 END CATCH
