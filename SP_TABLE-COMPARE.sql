@@ -4,7 +4,7 @@ Fecha de Creación: 27/05/2019
 Función: Modificar tabla de dos bases de datos para que la de destino coincidacon formato de tabla de origen
 Task: Manual
 */
-create procedure SP_Columnas_Diferencia @base1 varchar(max),@base2 varchar(max),@basetabla1 varchar(max),@basetabla2 varchar(max)
+create procedure SP_Columnas_Diferencia @base1 varchar(max),@base2 varchar(max),@tabla varchar(max)
 as
 begin
 declare @sql varchar(max)
@@ -17,7 +17,7 @@ FROM
             ON t.object_id = c.object_id
     INNER JOIN '+ @base1+'.sys.types ty 
             ON c.system_type_id = ty.system_type_id
-    WHERE t.name = '''+ @basetabla1+'''
+    WHERE t.name = '''+ @tabla+'''
     EXCEPT
     SELECT  c.name "Columnas"
     FROM '+ @base2+'.sys.tables t
@@ -25,7 +25,7 @@ FROM
             ON t.object_id = c.object_id
     INNER JOIN '+ @base2+'.sys.types ty 
             ON c.system_type_id = ty.system_type_id
-    WHERE t.name = '''+ @basetabla2+'''
+    WHERE t.name = '''+ @tabla+'''
 ) as izquierda
 UNION ALL
 SELECT Columnas
@@ -37,7 +37,7 @@ FROM
             ON t.object_id = c.object_id
     INNER JOIN '+ @base2+'.sys.types ty 
             ON c.system_type_id = ty.system_type_id
-    WHERE t.name = '''+ @basetabla2+'''
+    WHERE t.name = '''+ @tabla+'''
     EXCEPT
     SELECT  c.name "Columnas"
     FROM '+ @base1+'.sys.tables t
@@ -45,13 +45,13 @@ FROM
             ON t.object_id = c.object_id
     INNER JOIN '+ @base1+'.sys.types ty 
             ON c.system_type_id = ty.system_type_id
-    WHERE t.name = '''+ @basetabla1+'''
+    WHERE t.name = '''+ @tabla+'''
 ) as derecha'
 
 exec(@sql)
 end
 
-
+go
 CREATE PROCEDURE SP_TABLE_COMPARE @table VARCHAR(80), @origin_database VARCHAR(80), @destination_database VARCHAR(80)
 AS
 BEGIN TRY
@@ -82,6 +82,7 @@ CREATE TABLE #columnasHuerfanas (COLUMN_NAME VARCHAR(80))(
 );
 IF (SELECT COUNT(COLUMN_NAME) FROM #columnasHuerfanas) > 0
 	-- Crear el SP (o meter aca) para recorrer, cursor mediante, estas columnas para realizar el alter correspondiente en la tabla destino
+
 	RAISERROR('Not implemented', 16, 1)
 
 END TRY
