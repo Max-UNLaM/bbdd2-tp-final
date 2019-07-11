@@ -360,13 +360,21 @@ AS
 		print N'-- POSIBLES CAMBIOS A REALIZAR EN LA BASE DE DATOS INDICADAS si existen --';
 		DECLARE @query NVARCHAR(1000);
 		--  guardo en la tabla temporal CAMPOS_ORIGEN todos los campos que tiene la tabla origen
-		SET @query = N'select column_name, column_default, is_nullable, data_type, character_maximum_length into ##CAMPOS_ORIGEN from ' + @bdOrigen + '.INFORMATION_SCHEMA.COLUMNS where TABLE_NAME=''' + @tabla + ''';';
+		SET @query = N'select column_name, column_default, is_nullable, data_type, character_maximum_length into ##CAMPOS_ORIGEN
+					   from ' + @bdOrigen + '.INFORMATION_SCHEMA.COLUMNS
+					   where TABLE_NAME=''' + @tabla + ''';';
 		EXEC (@query);
 					
-		SET @query = N'select t2.column_name, t1.constraint_name into ##PRIMARY_KEY_ORIGEN from ' + @bdOrigen + '.INFORMATION_SCHEMA.TABLE_CONSTRAINTS T1 join ' + @bdOrigen + '.INFORMATION_SCHEMA.KEY_COLUMN_USAGE T2 ON T2.CONSTRAINT_NAME = T1.CONSTRAINT_NAME where T1.TABLE_NAME=''' + @tabla + ''' and T1.CONSTRAINT_TYPE = ''PRIMARY KEY'' ;';
+		SET @query = N'select t2.column_name, t1.constraint_name into ##PRIMARY_KEY_ORIGEN
+					   from ' + @bdOrigen + '.INFORMATION_SCHEMA.TABLE_CONSTRAINTS T1 
+					   join ' + @bdOrigen + '.INFORMATION_SCHEMA.KEY_COLUMN_USAGE T2 ON T2.CONSTRAINT_NAME = T1.CONSTRAINT_NAME
+					   where T1.TABLE_NAME=''' + @tabla + ''' and T1.CONSTRAINT_TYPE = ''PRIMARY KEY'' ;';
 		EXEC (@query);
 
-		SET @query = N'select t2.column_name, t1.constraint_name into ##UNIQUE_ORIGEN from ' + @bdOrigen + '.INFORMATION_SCHEMA.TABLE_CONSTRAINTS T1 join ' + @bdOrigen + '.INFORMATION_SCHEMA.KEY_COLUMN_USAGE T2 ON T2.CONSTRAINT_NAME = T1.CONSTRAINT_NAME where T1.TABLE_NAME=''' + @tabla + ''' AND T1.CONSTRAINT_TYPE = ''UNIQUE'' ;';
+		SET @query = N'select t2.column_name, t1.constraint_name into ##UNIQUE_ORIGEN
+					   from ' + @bdOrigen + '.INFORMATION_SCHEMA.TABLE_CONSTRAINTS T1
+					   join ' + @bdOrigen + '.INFORMATION_SCHEMA.KEY_COLUMN_USAGE T2 ON T2.CONSTRAINT_NAME = T1.CONSTRAINT_NAME
+					   where T1.TABLE_NAME=''' + @tabla + ''' AND T1.CONSTRAINT_TYPE = ''UNIQUE'' ;';
 		EXEC (@query);
 
 		-- Declaro variables que van a usar los cursores
@@ -504,6 +512,10 @@ AS
 			DEALLOCATE C_UNIQUE_ORIGEN
 
 		END
+		-- Elimino las tablas temporales manualmente porque sino en la otra iteracion se chocan
+		DROP TABLE ##CAMPOS_ORIGEN
+		DROP TABLE ##PRIMARY_KEY_ORIGEN 
+		DROP TABLE ##UNIQUE_ORIGEN
 	END TRY
 	BEGIN CATCH
 		-- Print del error y cierra los cursores si quedaron abiertos
@@ -553,10 +565,14 @@ AS
 		print N'-- POSIBLES CAMBIOS A REALIZAR EN LA TABLAS INDICADAS si existen --';
 		-- Guarda los datos de la tabla de cada BD, en las tablas temporales ORIG y DEST
 		DECLARE @query NVARCHAR(1000);
-		SET @query = N'select table_catalog, table_name, column_name, column_default, is_nullable, data_type, character_maximum_length into ##ORIG from ' + @bdOrigen + '.information_schema.columns where table_name = ''' + @tabla + ''';';
+		SET @query = N'select table_catalog, table_name, column_name, column_default, is_nullable, data_type, character_maximum_length into ##ORIG
+					   from ' + @bdOrigen + '.information_schema.columns
+					   where table_name = ''' + @tabla + ''';';
 		EXEC (@query)
 
-		SET @query = N'select table_catalog, table_name, column_name, column_default, is_nullable, data_type, character_maximum_length into ##DEST from ' + @bdDestino + '.information_schema.columns where table_name = ''' + @tabla + ''';';
+		SET @query = N'select table_catalog, table_name, column_name, column_default, is_nullable, data_type, character_maximum_length into ##DEST
+					   from ' + @bdDestino + '.information_schema.columns
+					   where table_name = ''' + @tabla + ''';';
 		EXEC (@query)
 
 		-- Guarda en la tabla temporal CAMBIOS_ORIG los campos que no existen en la Tabla DEST
@@ -713,6 +729,11 @@ AS
 			DEALLOCATE C_CAMBIOS_DEST
 
 		END
+		DROP TABLE ##ORIG
+		DROP TABLE ##DEST
+		DROP TABLE ##DIFERENCIAS
+		DROP TABLE ##CAMBIOS_ORIG
+		DROP TABLE ##CAMBIOS_DEST
 	END TRY
 	BEGIN CATCH
 		-- Print del error y cierra los cursores si quedaron abiertos
