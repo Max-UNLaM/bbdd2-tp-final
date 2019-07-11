@@ -289,7 +289,10 @@ CREATE PROCEDURE SP_ELIMINAR_RESTRICCIONES @bd varchar(50), @tabla varchar(50), 
 AS
 	BEGIN TRY
 		-- Nombre de la tabla temporal
-			-- RESTRICCIONES; 
+			-- RESTRICCIONES;
+		set nocount on
+		print N' ';
+		print N'-- ELIMINAR RESTRECCIONES PARA REALIZAR LOS CAMBIOS si existen --';
 		DECLARE @query NVARCHAR(1000);
 		-- Guarda las restricciones en la tabla temporal RESTRICCIONES para luego recorrerla y eliminarlas
 		SET @query = N'SELECT d.name restriccion INTO ##RESTRICCIONES
@@ -324,7 +327,6 @@ AS
 			END
 			CLOSE C_RESTRICCIONES
 			DEALLOCATE C_RESTRICCIONES
-
 		END
 		DROP TABLE ##RESTRICCIONES
 	END TRY
@@ -617,8 +619,8 @@ AS
 
 			WHILE @@fetch_status = 0
 			BEGIN
-				-- IMPORTANTE: Antes del alter column hay que eliminar las restricciones de esta columna !! Sino no deja eliminar o alterar la columna
-				--EXEC SP_ELIMINAR_RESTRICCIONES @bdDestino, @tabla, @columna --||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
+				-- IMPORTANTE: Antes del alter column hay que eliminar las restricciones de esta campo !! Sino no deja eliminar o alterar el campo
+				-- EXEC SP_ELIMINAR_RESTRICCIONES @bdDestino, @tabla, @columna --||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||
 
 				SET @query = 'ALTER TABLE [' + @bdDestino + '].dbo.' + @tabla + ' ALTER COLUMN ' + @columna + ' ' + @tipo;
 
@@ -932,3 +934,4 @@ GO
 
 
 --> EXEC SP_COMPARAR_BASES 'DB_Origen', 'DB_Destino';
+
