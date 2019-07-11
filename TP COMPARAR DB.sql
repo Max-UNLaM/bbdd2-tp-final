@@ -314,7 +314,6 @@ AS
 
 			WHILE @@fetch_status = 0
 			BEGIN
-			
 				-- Elimina las restricciones una por una
 				SET @query = 'ALTER TABLE [' + @bd + '].dbo.' + @tabla + ' DROP CONSTRAINT  ' + @restriccion + ';';
 							
@@ -322,13 +321,12 @@ AS
 				-- EXEC (@query);
 							
 				FETCH NEXT FROM C_RESTRICCIONES INTO @restriccion
-		
 			END
 			CLOSE C_RESTRICCIONES
 			DEALLOCATE C_RESTRICCIONES
 
 		END
-
+		DROP TABLE ##RESTRICCIONES
 	END TRY
 	BEGIN CATCH
 		-- Print del error y cierra el cursor si quedó abierto
@@ -851,7 +849,7 @@ AS
 					WHILE @@fetch_status = 0
 					BEGIN
 						-- Usamos una sentencia porque no vale la pena crear un SP solo para un Drop Table
-						SET @query = N'DROP TABLE ' + @bdDestino + '.dbo.' + @tabla + ';'; 
+						SET @query = N'DROP TABLE ' + @bdDestino + '.dbo.' + @tabla; 
 						print @query;
 						-- EXEC (@query)
 							
